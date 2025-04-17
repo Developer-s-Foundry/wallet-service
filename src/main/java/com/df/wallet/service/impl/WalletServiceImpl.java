@@ -1,6 +1,7 @@
 package com.df.wallet.service.impl;
 
 import com.df.wallet.TransactionType;
+import com.df.wallet.dtos.request.FundWalletRequestDTO;
 import com.df.wallet.dtos.request.WalletCreateRequestDTO;
 import com.df.wallet.dtos.request.WalletTransferRequest;
 import com.df.wallet.dtos.request.WalletWithdrawRequest;
@@ -215,5 +216,136 @@ public ApiResponse<?> getWalletTransactions(Long walletId, Pageable pageable){
     return new ApiResponse<>(200, "Successful","01", true,transactionDtos);
 
 }
+
+
+    @Override
+    public ApiResponse<?> disableWallet(Long walletId) {
+        log.info("Attempting to disable wallet with walletId: {}", walletId);
+
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElse(null);
+
+        if (wallet == null) {
+            log.info("Wallet with walletId: {} not found", walletId);
+            return ApiResponse.builder()
+                    .statusCode(404)
+                    .message("Wallet not found")
+                    .responseCode("05")
+                    .success(false)
+                    .build();
+        }
+
+        if (!wallet.isEnabled()) {
+            log.info("Wallet with walletId: {} is already disabled", walletId);
+            return ApiResponse.builder()
+                    .statusCode(400)
+                    .message("Wallet is already disabled")
+                    .responseCode("05")
+                    .success(false)
+                    .build();
+        }
+
+        wallet.setEnabled(false);
+        walletRepository.save(wallet);
+
+        log.info("Wallet with walletId: {} disabled successfully", walletId);
+        return ApiResponse.builder()
+                .statusCode(200)
+                .message("Wallet disabled successfully")
+                .responseCode("01")
+                .success(true)
+                .data(wallet)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<?> setTransactionLimit(Long walletId, BigDecimal newLimit) {
+        log.info("Setting new transaction limit for walletId: {} to {}", walletId, newLimit);
+
+        Wallet wallet = walletRepository.findById(walletId).orElse(null);
+        if (wallet == null) {
+            return ApiResponse.builder()
+                    .statusCode(404)
+                    .message("Wallet not found")
+                    .responseCode("05")
+                    .success(false)
+                    .build();
+        }
+
+        wallet.setDailyTransactionLimit(newLimit);
+        walletRepository.save(wallet);
+
+        return ApiResponse.builder()
+                .statusCode(200)
+                .message("Transaction limit updated successfully")
+                .responseCode("00")
+                .success(true)
+                .data(wallet)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<?> removeTransactionLimit(Long walletId) {
+        log.info("Removing transaction limit for walletId: {}", walletId);
+
+        Wallet wallet = walletRepository.findById(walletId).orElse(null);
+        if (wallet == null) {
+            return ApiResponse.builder()
+                    .statusCode(404)
+                    .message("Wallet not found")
+                    .responseCode("05")
+                    .success(false)
+                    .build();
+        }
+
+        wallet.setDailyTransactionLimit(null); // Remove the limit
+        walletRepository.save(wallet);
+
+        return ApiResponse.builder()
+                .statusCode(200)
+                .message("Transaction limit removed successfully")
+                .responseCode("00")
+                .success(true)
+                .data(wallet)
+                .build();
+    }
+
+    @Override
+    public ApiResponse<?> fundWallet(FundWalletRequestDTO requestDTO) {
+        log.info("Funding walletId: {} with amount: {}", requestDTO.getWalletId(), requestDTO.getAmount());
+
+        Wallet wallet = walletRepository.findById(requestDTO.getWalletId()).orElse(null);
+        if (wallet == null) {
+            return ApiResponse.builder()
+                    .statusCode(404)
+                    .message("Wallet not found")
+                    .responseCode("05")
+                    .success(false)
+                    .build();
+        }
+
+        if (!wallet.isEnabled()) {
+            return ApiResponse.builder()
+                    .statusCode(400)
+                    .message("Wallet is not enabled")
+                    .responseCode("05")
+                    .success(false)
+                    .build();
+        }
+
+        BigDecimal currentBalance = wallet.getBalance() != null ? wallet.getBalance() : BigDecimal.ZERO;
+        wallet.setBalance(currentBalance.add(requestDTO.getAmount()));
+        walletRepository.save(wallet);
+
+        return ApiResponse.builder()
+                .statusCode(200)
+                .message("Wallet funded successfully")
+                .responseCode("00")
+                .success(true)
+                .data(wallet)
+                .build();
+    }
+
+
 
 }

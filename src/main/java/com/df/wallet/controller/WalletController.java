@@ -1,5 +1,6 @@
 package com.df.wallet.controller;
 
+import com.df.wallet.dtos.request.FundWalletRequestDTO;
 import com.df.wallet.dtos.request.WalletCreateRequestDTO;
 import com.df.wallet.dtos.request.WalletTransferRequest;
 import com.df.wallet.dtos.request.WalletWithdrawRequest;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/wallet")
@@ -54,4 +57,29 @@ public class WalletController {
 
         return walletService.getWalletTransactions(walletId, pageable);
     }
+
+    @PutMapping("/disable/{walletId}")
+    public ApiResponse<?> disableWallet(@PathVariable Long walletId) {
+
+        return walletService.disableWallet(walletId);
+    }
+
+    @PutMapping("/limit/{walletId}")
+    public ApiResponse<?> setTransactionLimit(
+            @PathVariable Long walletId,
+            @RequestParam BigDecimal limit
+    ) {
+        return walletService.setTransactionLimit(walletId, limit);
+    }
+
+    @PutMapping("/limit/remove/{walletId}")
+    public ApiResponse<?> removeTransactionLimit(@PathVariable Long walletId) {
+        return walletService.removeTransactionLimit(walletId);
+    }
+
+    @PostMapping("/fund")
+    public ApiResponse<?> fundWallet(@RequestBody FundWalletRequestDTO requestDTO) {
+        return walletService.fundWallet(requestDTO);
+    }
+
 }
