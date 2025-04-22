@@ -3,9 +3,9 @@ spring:
   name: Wallet Service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/signin-db
-    username: postgres
-    password: Mm1605479.
+    url: jdbc:postgresql://localhost:5432/wallet-db
+    username: your-username
+    password: your-password
     driver-class-name: org.postgresql.Driver
 
   # Hibernate Configuration
